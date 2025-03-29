@@ -3,133 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Character Matrix</title>
+    <title>Stat Block Generator</title>
     <style>
         body {
             background-color: black;
             color: white;
-            font-size: 32px; /* Makes the text twice as large */
             font-family: Arial, sans-serif;
+            font-size: 40px; /* Doubled the font size */
         }
         table { 
             border-collapse: collapse; 
             margin: 20px auto; 
         }
         td, th { 
-            width: 50px; 
-            height: 50px; 
+            width: 60px; 
+            height: 60px; 
             text-align: center; 
-            border: 1px solid transparent; /* Default border */
-            background-color: #333; /* Dark shade of gray */
         }
         input { 
             width: 100%; 
             height: 100%; 
             text-align: center; 
             border: none; 
-            font-size: 32px; /* Makes the input text larger as well */
-            background-color: #333; /* Dark shade of gray */
+            font-size: 40px; /* Doubled font size */
+            background-color: #333; /* Darker input cells */
             color: white;
         }
-        span {
-            font-size: 32px;
+        button { 
+            display: block; 
+            margin: 10px auto; 
+            padding: 10px; 
+            font-size: 40px; /* Doubled font size */
+            background-color: black; 
+            color: white; 
+            border: 2px solid white; /* Button border visible */
         }
-        /* Lighter gray for the 4th row, 4th column, and bottom-right cell */
-        .light-gray {
-            background-color: #555; /* Lighter shade */
+        button:hover {
+            background-color: #444;
         }
-        .total-cell {
-            background-color: #777; /* Even lighter for the bottom-right corner */
+        .total-sum { 
+            font-size: 40px; /* Doubled font size */
+            color: white; 
+            background-color: lightgray; /* Light gray for total sum */
+            text-align: center; 
+            padding: 10px; 
+            margin-top: 10px; 
+        }
+        .row-sum, .col-sum { 
+            color: lightyellow; /* Light yellow for row/col totals */
+            background-color: darkgray; /* Dark gray for other totals */
         }
     </style>
 </head>
 <body>
-    <h2 style="text-align:center;">Stat Block Matrix</h2>
+    <h2 style="text-align:center;">Stat Block Generator</h2>
     <table>
-        <tbody id="grid">
-            <!-- Table body will be dynamically filled by JavaScript -->
-        </tbody>
+        <tbody id="grid"></tbody>
     </table>
-    
+    <button onclick="generateGrid()">Generate</button>
     <script>
-        const grid = document.getElementById('grid');
+        const grid = document.getElementById("grid");
         let inputs = [];
-        let rowSums = [];
-        let colSums = [0, 0, 0];
+        let rowSumCells = [];
+        let colSumCells = [];
 
-        // Create a 4x4 grid, input fields in the first 3x3, sum fields in the last row/column
-        for (let i = 0; i < 4; i++) {
-            let row = document.createElement('tr');
+        // Create 3x3 grid with inputs
+        for (let i = 0; i < 3; i++) {
+            let row = document.createElement("tr");
             inputs[i] = [];
-
-            for (let j = 0; j < 4; j++) {
-                let cell = document.createElement('td');
-                
-                if (i < 3 && j < 3) {
-                    let input = document.createElement('input');
-                    input.type = 'number';
-                    input.value = '0';
-                    input.oninput = calculateSums;
-                    inputs[i][j] = input;
-                    cell.appendChild(input);
-                } else if (i < 3 && j === 3) {
-                    // Row sums (fourth column)
-                    rowSums[i] = document.createElement('span');
-                    rowSums[i].textContent = '0';
-                    cell.appendChild(rowSums[i]);
-                    cell.classList.add('light-gray'); // Light gray for the row sum column
-                } else if (i === 3 && j < 3) {
-                    // Column sums (fourth row)
-                    let colSum = document.createElement('span');
-                    colSum.textContent = '0';
-                    colSums[j] = colSum;
-                    cell.appendChild(colSum);
-                    cell.classList.add('light-gray'); // Light gray for the column sum row
-                } else if (i === 3 && j === 3) {
-                    // Total sum in the bottom-right corner
-                    let totalSum = document.createElement('span');
-                    totalSum.textContent = '0';
-                    cell.appendChild(totalSum);
-                    cell.classList.add('total-cell'); // Even lighter for the total sum cell
-                }
-
+            for (let j = 0; j < 3; j++) {
+                let cell = document.createElement("td");
+                let input = document.createElement("input");
+                input.type = "number";
+                input.value = "0";
+                input.oninput = calculateSums;
+                inputs[i][j] = input;
+                cell.appendChild(input);
                 row.appendChild(cell);
             }
+            let rowSumCell = document.createElement("td");
+            rowSumCell.className = "row-sum";
+            rowSumCell.textContent = "0";
+            row.appendChild(rowSumCell);
+            rowSumCells.push(rowSumCell);
             grid.appendChild(row);
         }
 
+        // Create last row for column sums and total sum
+        let colSumRow = document.createElement("tr");
+        for (let j = 0; j < 3; j++) {
+            let colSumCell = document.createElement("td");
+            colSumCell.className = "col-sum";
+            colSumCell.textContent = "0";
+            colSumCells.push(colSumCell);
+            colSumRow.appendChild(colSumCell);
+        }
+        let totalSumCell = document.createElement("td");
+        totalSumCell.className = "total-sum";
+        totalSumCell.textContent = "0";
+        colSumRow.appendChild(totalSumCell);
+        grid.appendChild(colSumRow);
+
         // Function to calculate sums
         function calculateSums() {
+            let colSums = [0, 0, 0];
             let totalSum = 0;
-
-            // Reset column sums
-            colSums = [0, 0, 0];
-            
-            // Calculate row sums and column sums
             for (let i = 0; i < 3; i++) {
                 let rowSum = 0;
                 for (let j = 0; j < 3; j++) {
-                    let value = parseInt(inputs[i][j].value) || 0;
-                    rowSum += value;
-                    colSums[j] += value; // Add to column sum
-                    totalSum += value;
+                    let val = parseInt(inputs[i][j].value) || 0;
+                    rowSum += val;
+                    colSums[j] += val;
+                    totalSum += val;
                 }
-                rowSums[i].textContent = rowSum;
+                rowSumCells[i].textContent = rowSum;
             }
-
-            // Update column sums in the last row
             for (let j = 0; j < 3; j++) {
-                let colSumCell = grid.querySelector(`tr:last-child td:nth-child(${j + 1}) span`);
-                colSumCell.textContent = colSums[j];
+                colSumCells[j].textContent = colSums[j];
             }
-
-            // Display the total sum in the bottom-right corner
-            let totalCell = grid.querySelector('tr:last-child td:last-child span');
+            // Update total sum in the last cell of the grid
+            let totalCell = grid.querySelector("tr:last-child td.total-sum");
             totalCell.textContent = totalSum;
         }
 
-        // Initial calculation on page load
-        calculateSums();
+        // Function to generate random numbers for the grid
+        function generateGrid() {
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    inputs[i][j].value = Math.floor(Math.random() * 5) + 2;
+                }
+            }
+            calculateSums();
+        }
     </script>
 </body>
 </html>
